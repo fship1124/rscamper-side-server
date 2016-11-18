@@ -1,0 +1,19 @@
+{
+  "name": "rscamper-side-server",
+  "version": "1.0.0",
+  "description": "rscamper-side-server",
+  "main": "app_routes.js",
+  "dependencies": {
+    "body-parser": "^1.15.2",
+    "express": "^4.14.0",
+    "jade": "^1.11.0",
+    "mongoose": "^4.6.4",
+    "socket.io": "^1.5.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "node app_routes.js"
+  },
+  "author": "",
+  "license": "ISC"
+}
