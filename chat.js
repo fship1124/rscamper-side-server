@@ -20,7 +20,7 @@ var server = http.createServer(function(request, response) {
 
 
 //CONNECT TO MONGODB SERVER
-mongoose.connect('mongodb://localhost:27017/rscamper');
+mongoose.connect('mongodb://192.168.0.173:27017/rscamper');
 
 var db = mongoose.connection;
 db.on('error', console.error);
@@ -55,6 +55,7 @@ var ChatMsgModel = mongoose.model('chatmsg', chatMessageSchema);
 var rooms = [];
 var userInfo = [];
 var userId;
+var serverUrl = "http://14.32.66.104:";
 
 var Now = new Date();
 
@@ -78,7 +79,7 @@ socketIo.on("connection", function(socket) {
 		function getRoomUserInfo(userInfo, data, asd) {
 			$.ajax({
 				method : 'GET',
-				url    : 'http://14.32.66.104:8081/app/chat/selectRoomUserList',
+				url    : serverUrl + '8081/app/chat/selectRoomUserList',
 				data   : {
 					'chatRoomInfoNo' : userInfo.room
 				},
@@ -198,46 +199,43 @@ socketIo.on("connection", function(socket) {
     		console.log("유저정보 : ",userInfo[socket.id]);
     		$.ajax({
         		method  : 'GET',
-        		url     : 'http://14.32.66.104:8081/app/chat/delChatUser',
+        		url     : serverUrl + '8081/app/chat/delChatUser',
         		data    : {
         			'uid' : userInfo[socket.id].uid
         		},
         		success : function () {
-        			console.log("방에서 삭제");
+        			var roomLength = socketIo.sockets.adapter.rooms[userInfo[socket.id].room].length - 1;
+            		if (roomLength == 0) {
+            			$.ajax({
+            				method : 'GET',
+            				url    : serverUrl + '8081/app/chat/delRoom',
+            				data   : {
+            					'roomNo' : userInfo[socket.id].room,
+            					'no'     : userInfo[socket.id].areacode
+            				},
+            				dataType : "json",
+            				success  : function (result) {
+            					console.log('방정보',result);
+            					socket.emit('roomList',result);
+            				}
+            			})
+            		} else if (roomLength > 0) {
+            			$.ajax({
+            				method : 'GET',
+            				url    : serverUrl + '8081/app/chat/selectRoomUserList',
+            				data   : {
+            					'chatRoomInfoNo' : userInfo[socket.id].room
+            				},
+            				dataType : "json",
+            				success  : function (result) {
+            					console.log("다른 유저가 방에서 나갔을 때",result);
+            					socket.broadcast.to(userInfo[socket.id].room).emit('getUserInfo', result);
+            					socket.emit('outRoomUser');
+            				}
+            			})
+            		}
         		}
         	})
-    		
-    		var roomLength = socketIo.sockets.adapter.rooms[userInfo[socket.id].room].length - 1;
-    		if (roomLength == 0) {
-    			$.ajax({
-    				method : 'GET',
-    				url    : 'http://14.32.66.104:8081/app/chat/delRoom',
-    				data   : {
-    					'roomNo' : userInfo[socket.id].room,
-    					'no'     : userInfo[socket.id].areacode
-    				},
-    				dataType : "json",
-    				success  : function (result) {
-    					console.log('방정보',result);
-    					socket.emit('roomList',result);
-    				}
-    			})
-    		} else if (roomLength > 0) {
-    			$.ajax({
-    				method : 'GET',
-    				url    : 'http://14.32.66.104:8081/app/chat/selectRoomUserList',
-    				data   : {
-    					'chatRoomInfoNo' : userInfo[socket.id].room
-    				},
-    				dataType : "json",
-    				success  : function (result) {
-    					console.log("유저정보",result);
-    					socket.broadcast.to(userInfo[socket.id].room).emit('getUserInfo', result);
-    					socket.emit('outRoomUser');
-    				}
-    			})
-    		}
-    		
     		
     		// db 입력
     		var chatLog = new ChatLogModel();
