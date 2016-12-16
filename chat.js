@@ -130,8 +130,8 @@ socketIo.on("connection", function(socket) {
 		
 		chatLog.save(function(error, chatLog){
 			console.log("log save 입장");
-			console.log(chatLog.log);
-			console.log(chatLog.date);
+//			console.log(chatLog.log);
+//			console.log(chatLog.date);
 			if (error)  return console.error(err);
 		});	
 			
